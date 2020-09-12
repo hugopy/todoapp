@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todo list</title>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="bootstrap.css">
+    <link rel="script/javascript" src="bootstrap.js">
+</head>
+
+<style>
+    .task-list-container {
+        min-width: 20rem;
+        max-width: 30rem;
+    }
+
+    li  span * {
+        display: inline;
+    }    
+
+</style>
+<body>
+    <h3>Todo list app!</h3>
+    <div class="task-input-container" style="width: 20rem">
+        <div class="task-warning"></div>
+        <input type="text" class="input-task-name" required placeholder="Insert task name here...">
+        <input type="datetime-local" class="input-task-date" required>
+        <button class="btn btn-success btn-add-task" type="submit">Add Task</button>
+    </div>
+    <div class="task-list-container card text-center">
+        <ul class="list-group task-list">
+            <!-- List items will appear here -->
+        </ul>
+    </div>
+</body>
+
+
+<!-- TODO: document onload readjustment
+     TODO: everytime the page loads, fetch all tasks from the list, get their taskDate attribute,
+     TODO: then compare it to the current time to readjust remaining time. 
+     TODO: -->
+
+<script>
+    const btn_addTask = document.querySelector(".btn-add-task");
+    var nextTaskId = 0;
+
+    function dataParser(rawDateObj) {
+        // Date format: 2020-09-12 00:00:00 [TIMEZONE OFFSET]
+        // Convert to hours difference
+
+        const today = new Date();
+
+        // <!-- ? HTML 'date' input type returns a date string always with 0 Timezone Offset, -->
+        // <!-- ? and JavaScript gets current Date at local timezone. So, it'll be necessary a shift in hour value. -->
+        // <!-- ? e.g for GMT-3: if September 14th is selected in HTML form, JS will read it as September 13th 21:00 -->
+        // <!-- ? even though user is not at GMT+0. So, adding 3 to HTML date (September 14th 3:00 AM) should fix this. -->
+        // <!-- ? inputs with datetime-local type returns a string already offseted. -->
+
+        rawDateObj.setHours(rawDateObj.getHours() + 0); // To set to GMT-3 timezone with date input type: add 3.
+        
+        // Math.abs works with date subtraction by returning difference in milliseconds.
+        // 1 hours is equal to 3.6 million milliseconds
+        // Then, it is necessary to convert the float value to an integer
+        var remainingH = parseInt(Math.abs(rawDateObj - new Date())/3600000)
+        let result;
+
+        if (remainingH >= 24) {
+            // Works like this:
+            // 27 hours remaning -> remaning days = 24.125 -> 24 AND remaning hours = 27 % 24 -> 3 hours
+            remainingDays = parseInt(remainingH/24);
+            remainingH %= 24;
+
+            remainingDays > 1 ? 
+                result = remainingDays + " dias e " + remainingH + " horas restando"
+            :
+                result = remainingDays + " dia e " + remainingH + " horas restando";
+        } else {
+            result = remainingH + " horas restando";
+        }
+
+        return result;
+    }
+
+    /* <!-- ! DEPRECATION 1) probably going to deprecate this -->
+    function parseDate(date) {
+        //                                              ARRAY
+        // the input date has the following format:     DD-MM
+        //                                              01234
+
+        var rawDay = date.slice(0,2);
+        if(rawDay[0] == '0') {
+            newDay = rawDay.slice(1,2);
+        } else {
+            newDay = rawDay.slice(0,2);
+        }
+
+        var rawMonth = date.slice(3,5);
+        let newMonth;
+
+        rawMonth == '01' ? newMonth = 'Janeiro'  :
+        rawMonth == '02' ? newMonth = 'Fevereiro':
+        rawMonth == '03' ? newMonth = 'Março'    :
+        rawMonth == '04' ? newMonth = 'Abril'    :
+        rawMonth == '05' ? newMonth = 'Maio'     :
+        rawMonth == '06' ? newMonth = 'Junho'    :
+        rawMonth == '07' ? newMonth = 'Julho'    :
+        rawMonth == '08' ? newMonth = 'Agosto'   :
+        rawMonth == '09' ? newMonth = 'Setembro' :
+        rawMonth == '10' ? newMonth = 'Outubro'  :
+        rawMonth == '11' ? newMonth = 'Novembro' :
+        rawMonth == '12' ? newMonth = 'Dezembro' : newMonth = "Indefinido";
+        
+        return newDay + ' de ' + newMonth;
+    }
+    */
+
+    function addTask(name, remainingTime, conclusionDate) {
+        const taskList = document.querySelector(".task-list");
+
+        /* <!-- ! DEPRECATION 1.1) this follows along deprecation 1 -->
+            var newDate = new String();
+            // <!-- Default input type date returns YYYY-MM-DD format. @-->
+            // <!-- To fix this, we're getting a slice from the string @-->
+
+            newDate = date.slice(8,10) + "-" + date.slice(5,7); // Gets day, then adds '-', then month. Result: DD-MM
+        */
+
+        var newTaskElement = 
+        `
+        <li class="list-group-item d-flex flex-nowrap align-items-center" taskID=${nextTaskId} taskDate=${conclusionDate}>
+
+            <span class="flex-grow-1 task-content">
+                <p class="task-name">${name}</p>
+                <strong>|</strong>
+                <p class="task-date">${remainingTime}</p> 
+            </span>
+
+            <button class="btn btn-warning mr-2">Edit</button>
+            <button class="btn btn-danger" onclick="deleteTask(${nextTaskId})">Delete</button>
+        </li>
+        `
+        taskList.innerHTML += newTaskElement;
+        nextTaskId++;
+    }
+
+    function deleteTask(id) {
+        // Delete li where taskID="id"
+        document.querySelector("li[taskID='"+id+"']").remove();
+
+
+    }
+
+    function dismissWarning() {
+        document.querySelector(".task-warning").innerHTML = ""
+    }
+
+    btn_addTask.addEventListener('click', () => {
+        // Gets raw inputs
+
+        const taskName = document.querySelector(".input-task-name").value;
+        const taskDate = document.querySelector(".input-task-date").value;
+
+        // If any of the entries is empty then warning pops up and inputs are cleared. Else, parse date and adds task.
+        if (taskName == '' || taskDate == '') {
+            document.querySelector(".task-warning").innerHTML = `<button class="btn btn-primary btn-sm mb-2" onclick="dismissWarning()">Um ou mais campos estão em branco!</button>`;
+            taskName.innerHTML = "";
+            taskDate.innerHTML = "";
+        } else {
+        // Converts data string into a valid Date object for parsing.
+
+        const taskDateObj = new Date(taskDate)
+        taskDateParsed = dataParser(taskDateObj);
+
+        addTask(taskName, taskDateParsed, taskDate);
+        }
+    })
+
+
+</script>
+</html>
