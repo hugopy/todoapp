@@ -16,31 +16,34 @@
         max-width: 30rem;
     }
 
+
     li  span * {
         display: inline;
     }    
 
 </style>
+
 <body>
+
     <h3>Todo list app!</h3>
+
     <div class="task-input-container" style="width: 20rem">
         <div class="task-warning"></div>
         <input type="text" class="input-task-name" required placeholder="Insert task name here...">
-        <input type="datetime-local" class="input-task-date" required>
-        <button class="btn btn-success btn-add-task" type="submit">Add Task</button>
+        <input type="datetime-local" min="2020-09-14T11:49" class="input-task-date" required>
+        <div class="btn-group mt-2 mb-2">
+            <button class="btn btn-success btn-add-task" type="submit">Add Task</button>
+            <button class="btn btn-primary btn-refresh-tasks" onclick="refreshTasks()">Refresh Tasks</button>
+        </div>
     </div>
+
     <div class="task-list-container card text-center">
         <ul class="list-group task-list">
             <!-- List items will appear here -->
         </ul>
     </div>
+
 </body>
-
-
-<!-- TODO: document onload readjustment
-     TODO: everytime the page loads, fetch all tasks from the list, get their taskDate attribute,
-     TODO: then compare it to the current time to readjust remaining time. 
-     TODO: -->
 
 <script>
     const btn_addTask = document.querySelector(".btn-add-task");
@@ -57,75 +60,80 @@
         // <!-- ? e.g for GMT-3: if September 14th is selected in HTML form, JS will read it as September 13th 21:00 -->
         // <!-- ? even though user is not at GMT+0. So, adding 3 to HTML date (September 14th 3:00 AM) should fix this. -->
         // <!-- ? inputs with datetime-local type returns a string already offseted. -->
+        // <!-- ? However, if 'datetime-local' input type is used, then the shift won't be necessary. -->
 
         rawDateObj.setHours(rawDateObj.getHours() + 0); // To set to GMT-3 timezone with date input type: add 3.
         
         // Math.abs works with date subtraction by returning difference in milliseconds.
-        // 1 hours is equal to 3.6 million milliseconds
+        // 1 hour is equal to 3.6 million milliseconds
         // Then, it is necessary to convert the float value to an integer
+
         var remainingH = parseInt(Math.abs(rawDateObj - new Date())/3600000)
+
         let result;
+
+        // Due to the fact it's a float, add 1 minute to correction.
+        var remainingMins = parseInt(Math.abs(rawDateObj - new Date())/60000) + 1;
 
         if (remainingH >= 24) {
             // Works like this:
-            // 27 hours remaning -> remaning days = 24.125 -> 24 AND remaning hours = 27 % 24 -> 3 hours
+            // 27 hours remaning -> remaining days = 24.125 -> parseInt(remainingD/24) -> 1
+            // remaning hours = 27 % 24 -> 3
+
             remainingDays = parseInt(remainingH/24);
             remainingH %= 24;
 
-            remainingDays > 1 ? 
-                result = remainingDays + " dias e " + remainingH + " horas restando"
-            :
-                result = remainingDays + " dia e " + remainingH + " horas restando";
-        } else {
-            result = remainingH + " horas restando";
-        }
+            if(remainingDays > 1) {
+                remainingH == 1
+                ?
+                    result = remainingDays + " dias e " + remainingH + " hora restando"
+                :
+                    result = remainingDays + " dias e " + remainingH + " horas restando";
+            } else if(remainingDays == 1) {
+                remainingH == 1
+                ?
+                    result = remainingDays + " dia e " + remainingH + " hora restando"
+                :
+                    result = remainingDays + " dia e " + remainingH + " horas restando";
+            }
 
+         
+        } else {
+            
+            // There's a problem with hour evaluation. If there are 1 hour and 60 minutes remaining,
+            // it will see as 1 hour remaining, but this is not correct.
+
+            // If there's 2 hours remaining, then there will be 120 minutes remaining.
+            // In order to not get a 3 hour difference between, for example, 13:00 and 15:00,
+            // subtract (60*remainingH) minutes if minutes are greater than 59.
+
+            // so, if minutes are still greater than 59, get the modulus of them divided by 60 and
+            // add 1 to remaining hours.
+
+            if (remainingMins > 59) remainingMins -= 60*remainingH;
+
+            if (remainingMins > 59) {
+                remainingH = remainingH + 1;
+                remainingMins = remainingMins % 60;
+            }
+
+            if(remainingH == 1 && remainingMins != 0) {
+                result = remainingH + " hora e " + remainingMins + " minutos restando";
+            } else if(remainingH == 1 && remainingMins == 0) {
+                result = "1 hora restando";
+            } else if(remainingH == 0 && remainingMins != 0) {
+                result = remainingMins + " minutos restando";
+            } else {
+                result = remainingH + " horas restando";
+            }
+    
+        }
+       
         return result;
     }
 
-    /* <!-- ! DEPRECATION 1) probably going to deprecate this -->
-    function parseDate(date) {
-        //                                              ARRAY
-        // the input date has the following format:     DD-MM
-        //                                              01234
-
-        var rawDay = date.slice(0,2);
-        if(rawDay[0] == '0') {
-            newDay = rawDay.slice(1,2);
-        } else {
-            newDay = rawDay.slice(0,2);
-        }
-
-        var rawMonth = date.slice(3,5);
-        let newMonth;
-
-        rawMonth == '01' ? newMonth = 'Janeiro'  :
-        rawMonth == '02' ? newMonth = 'Fevereiro':
-        rawMonth == '03' ? newMonth = 'Março'    :
-        rawMonth == '04' ? newMonth = 'Abril'    :
-        rawMonth == '05' ? newMonth = 'Maio'     :
-        rawMonth == '06' ? newMonth = 'Junho'    :
-        rawMonth == '07' ? newMonth = 'Julho'    :
-        rawMonth == '08' ? newMonth = 'Agosto'   :
-        rawMonth == '09' ? newMonth = 'Setembro' :
-        rawMonth == '10' ? newMonth = 'Outubro'  :
-        rawMonth == '11' ? newMonth = 'Novembro' :
-        rawMonth == '12' ? newMonth = 'Dezembro' : newMonth = "Indefinido";
-        
-        return newDay + ' de ' + newMonth;
-    }
-    */
-
     function addTask(name, remainingTime, conclusionDate) {
         const taskList = document.querySelector(".task-list");
-
-        /* <!-- ! DEPRECATION 1.1) this follows along deprecation 1 -->
-            var newDate = new String();
-            // <!-- Default input type date returns YYYY-MM-DD format. @-->
-            // <!-- To fix this, we're getting a slice from the string @-->
-
-            newDate = date.slice(8,10) + "-" + date.slice(5,7); // Gets day, then adds '-', then month. Result: DD-MM
-        */
 
         var newTaskElement = 
         `
@@ -158,25 +166,35 @@
 
     btn_addTask.addEventListener('click', () => {
         // Gets raw inputs
-
         const taskName = document.querySelector(".input-task-name").value;
         const taskDate = document.querySelector(".input-task-date").value;
 
-        // If any of the entries is empty then warning pops up and inputs are cleared. Else, parse date and adds task.
+        // If any of the entries is empty, then warning pops up and inputs are cleared. Else, go parse date and add task.
         if (taskName == '' || taskDate == '') {
             document.querySelector(".task-warning").innerHTML = `<button class="btn btn-primary btn-sm mb-2" onclick="dismissWarning()">Um ou mais campos estão em branco!</button>`;
             taskName.innerHTML = "";
             taskDate.innerHTML = "";
         } else {
         // Converts data string into a valid Date object for parsing.
-
-        const taskDateObj = new Date(taskDate)
-        taskDateParsed = dataParser(taskDateObj);
+        taskDateParsed = dataParser(new Date(taskDate));
 
         addTask(taskName, taskDateParsed, taskDate);
         }
     })
 
+    function refreshTasks() {
+        tasks = document.querySelectorAll(".task-list li");
 
+        // For each task...
+        for(var element of tasks) {
+            var taskDate = element.getAttribute("taskDate");
+
+            // Gets string with time remaining based on taskDate
+            var refreshedTimeRemaining = dataParser(new Date(taskDate));
+            // Selects <p> textContent from task
+            document.querySelector(`li[taskDate="${taskDate}"] .task-date`).textContent = refreshedTimeRemaining;
+            
+        }
+    }
 </script>
 </html>
