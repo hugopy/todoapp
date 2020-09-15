@@ -1,0 +1,46 @@
+.task-list {
+    min-width: 25rem;
+    max-width: 80%;
+}
+
+.task-input-container {
+    display: grid;
+    place-items: center;
+}
+
+.task-input-container * {
+    width: 100%;
+}
+
+.task-edit-input-container {
+    display: grid;
+    place-items: center;
+}
+
+.task-edit-input-container * {
+    width: 100%;
+}
+
+.col:not(:first-child) {
+    border-left: 1.5px solid gray;
+}
+
+
+body {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    background: #ffb048;
+    height: 100%;
+    position: relative;
+}
+
+.editor-popup {
+    position: absolute;
+    display: grid;
+    place-items: center;
+    z-index: 999;
+    background: rgba(0, 0, 0, 0.5);
+    width: 100%;
+    height: 100vh;
+}
